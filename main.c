@@ -137,21 +137,25 @@ int main(int argc, char **argv)
 	init_matrix_rand(K, N, B);
 	init_matrix_val(M, N, C, 0.0);
 
+	FILE *f = fopen("out.txt", "w");
+
+	fprintf(f, "%d %d %d %d\n", M, N, K, num_of_threads);
+
 	double simple_start = omp_get_wtime();
         simple_mult(M, N, K, A, B, C);
         double simple_time = omp_get_wtime() - simple_start;
-	printf("Simple mult time: %lf, ", simple_time);
-        printf("sum = %lf\n", sum_of_elems(M, N, C));
+	fprintf(f, "Simple mult time: %lf, ", simple_time);
+        fprintf(f, "sum = %lf\n", sum_of_elems(M, N, C));
 
         num_of_threads = atoll(argv[4]);
         
 	double dgemm_start = omp_get_wtime();
         blas_dgemm(M, N, K, A, B, C);
         double dgemm_time = omp_get_wtime() - dgemm_start;
-	printf("DGEMM mult time:  %lf, ", dgemm_time);
-        printf("sum = %lf\n", sum_of_elems(M, N, C));
+	fprintf(f, "DGEMM mult time:  %lf, ", dgemm_time);
+        fprintf(f, "sum = %lf\n", sum_of_elems(M, N, C));
 
-        printf("Speedup: %lf\n", simple_time / dgemm_time);
+        fprintf(f, "Speedup: %lf\n", simple_time / dgemm_time);
 
         free(A);
         free(B);
