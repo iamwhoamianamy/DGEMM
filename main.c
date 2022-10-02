@@ -48,11 +48,11 @@ void blas_dgemm(int M, int N, int K, double *A, double *B, double *C)
 {
         size_t i, j, k;
 
-        #pragma omp parallel shared(A, B, C) private(i, j, k) num_threads(num_of_threads)
+        #pragma omp parallel num_threads(num_of_threads)
         {
                 double sum = 0;
 
-                #pragma omp for schedule(static)
+                #pragma omp for
                 for (i = 0; i < M; i++) {
                         for (j = 0; j < N; j++) {
                                 sum = 0;
