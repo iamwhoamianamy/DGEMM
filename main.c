@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <omp.h>
 #include <string.h>
+#include <math.h>
 
 int flat_id(int i, int j, int height)
 {
@@ -25,11 +26,14 @@ char size(int height, int width)
 
 void simple_mult(int M, int N, int K, double *A, double *B, double *C)
 {
-	for (size_t i = 0; i < M; i++) {
-		for (size_t j = 0; j < N; j++) {
-			double sum = 0;
+        double sum = 0;
+        size_t i, j, k;
 
-			for (size_t k = 0; k < K; k++) {
+	for (i = 0; i < M; i++) {
+		for (j = 0; j < N; j++) {
+			sum = 0;
+
+			for (k = 0; k < K; k++) {
 				sum += get_elem(i, k, M, A) * get_elem(k, j, K, B);
 			}	
 
@@ -40,16 +44,23 @@ void simple_mult(int M, int N, int K, double *A, double *B, double *C)
 
 void blas_dgemm(int M, int N, int K, double *A, double *B, double *C)
 {
-	for (size_t i = 0; i < M; i++) {
-                for (size_t j = 0; j < N; j++) {
-                        double sum = 0;
+        #pragma omp parallel
+        {
+                double sum = 0;
+                size_t i, j, k;
 
-                        for (size_t k = 0; k < K; k++) {
-                                sum += get_elem(i, k, M, A) * get_elem(k, j, K, B);
+                #pragma omp for
+                for (i = 0; i < M; i++) {
+                        for (j = 0; j < N; j++) {
+                                sum = 0;
+
+                                for (k = 0; k < K; k++) {
+                                        sum += get_elem(i, k, M, A) * get_elem(k, j, K, B);
+                                }	
+
+                                set_elem(i, j, M, C, sum);
                         }	
-
-                        set_elem(i, j, M, C, sum);
-                }	
+                }
         }
 }
 
@@ -88,6 +99,16 @@ void init_matrix_val(int height, int width, double *M, double val)
 		M[i] = val;	
 }
 
+double sum_of_elems(int height, int width, double* M)
+{
+        double sum = 0;
+
+        for (size_t i = 0; i < height * width; i++)
+                sum += M[i];        
+
+        return sum;
+}
+
 int main(int argc, char **argv)
 {
 	if(argc != 5)
@@ -96,7 +117,7 @@ int main(int argc, char **argv)
                 printf("\tM\n");
                 printf("\tN\n");
                 printf("\tK\n");
-                printf("\talg: [simple|dgemm]\n");
+                printf("\tthreads\n");
 		return 1;
 	}
 
@@ -104,24 +125,6 @@ int main(int argc, char **argv)
 	size_t K = atoll(argv[2]);
 	size_t N = atoll(argv[3]);
 
-        enum algorithm
-        {
-                simple = 0,
-                dgemm = 1
-        };
-
-        int alg;
-
-        if(strcmp(argv[4], "simple") == 0) {
-                alg = simple;
-        } else if(strcmp(argv[4], "dgemm") == 0) {
-                alg = dgemm;
-        } else {
-                printf("Unknown algorithm!");
-                return 1;
-        }
-        
-		
 	double *A = (double*)malloc(M * K * sizeof(*A));
 	double *B = (double*)malloc(K * N * sizeof(*B));
 	double *C = (double*)malloc(M * N * sizeof(*C));
@@ -130,21 +133,26 @@ int main(int argc, char **argv)
 	init_matrix_rand(K, N, B);
 	init_matrix_val(M, N, C, 0.0);
 
-	double start = omp_get_wtime();
-        
-        switch (alg) {
-        case simple:
-	        simple_mult(M, N, K, A, B, C);
-                break;
-        case dgemm:
-                blas_dgemm(M, N, K, A, B, C);
-                break;
-        }
+	double simple_start = omp_get_wtime();
+        simple_mult(M, N, K, A, B, C);
+        double simple_time = omp_get_wtime() - simple_start;
+	printf("Simple mult time: %lf, ", simple_time);
+        printf("sum = %lf\n", sum_of_elems(M, N, C));
 
-	double time = omp_get_wtime() - start;
+        omp_set_dynamic(0);
+        omp_set_num_threads(atoi(argv[4]));
 
-	printf("Simple mult time: %lf", time);
+	double dgemm_start = omp_get_wtime();
+        blas_dgemm(M, N, K, A, B, C);
+        double dgemm_time = omp_get_wtime() - dgemm_start;
+	printf("DGEMM mult time:  %lf, ", dgemm_time);
+        printf("sum = %lf\n", sum_of_elems(M, N, C));
 
-	printf("\n");
-	return 0;
+        printf("Speedup: %lf\n", simple_time / dgemm_time);
+
+        free(A);
+        free(B);
+        free(C);
+
+        return 0;
 }
