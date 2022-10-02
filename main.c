@@ -52,7 +52,7 @@ void printMatrix(int height, int width, double *M)
 	}
 }
 
-void init_matrix(int height, int width, double *M)
+void init_matrix_incr(int height, int width, double *M)
 {
 	int k = 1;
 	for(size_t i = 0; i < height; i++) {
@@ -61,6 +61,19 @@ void init_matrix(int height, int width, double *M)
 			k++;
 		}
 	}
+}
+
+void init_matrix_rand(int height, int width, double *M)
+{
+	for(size_t i = 0; i < height; i++)
+		for(size_t j = 0; j < width; j++)
+			set_elem(i, j, height, M, (double)rand() / RAND_MAX);
+}
+
+void init_matrix_val(int height, int width, double *M, double val)
+{
+	for (size_t i = 0; i < height * width; i++)
+		M[i] = val;	
 }
 
 int main(int argc, char **argv)
@@ -73,13 +86,15 @@ int main(int argc, char **argv)
 	double *B = (double*)malloc(K * N * sizeof(*B));
 	double *C = (double*)malloc(M * N * sizeof(*C));
 
-	init_matrix(M, K, A);
+	init_matrix_rand(M, K, A);
 	printf("A:\n");
 	printMatrix(M, K, A);
 
-	init_matrix(K, N, B);
+	init_matrix_rand(K, N, B);
 	printf("B:\n");
 	printMatrix(K, N, B);
+
+	init_matrix_val(M, N, C, 0.0);
 
 	simple_mult(M, N, K, A, B, C);
 
