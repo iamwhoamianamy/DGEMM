@@ -1,0 +1,20 @@
+1 
+Simple mult time: 0.533000, sum = 120104550.804036
+DGEMM mult time:  0.534000, sum = 120104550.804036
+Speedup: 0.998127
+2 
+Simple mult time: 0.476000, sum = 120104550.804036
+DGEMM mult time:  0.234000, sum = 120104550.804036
+Speedup: 2.034189
+4 
+Simple mult time: 0.453000, sum = 120104550.804036
+DGEMM mult time:  0.133000, sum = 120104550.804036
+Speedup: 3.406018
+8 
+Simple mult time: 0.547000, sum = 120104550.804036
+DGEMM mult time:  0.102000, sum = 120104550.804036
+Speedup: 5.362745
+16 
+Simple mult time: 0.558000, sum = 120104550.804036
+DGEMM mult time:  0.083000, sum = 120104550.804036
+Speedup: 6.722894
