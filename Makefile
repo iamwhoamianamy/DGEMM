@@ -1,2 +1,2 @@
 default:
-	gcc main.c -o main
+	gcc -o main -fopenmp main.c

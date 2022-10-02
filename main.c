@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <omp.h>
 
 int flat_id(int i, int j, int height)
 {
@@ -78,29 +79,30 @@ void init_matrix_val(int height, int width, double *M, double val)
 
 int main(int argc, char **argv)
 {
-	size_t M = 3;
-	size_t K = 2;
-	size_t N = 4;
+	if(argc != 4)
+	{
+		printf("Enter M, N, K!\n");
+		return 1;
+	}
+
+	size_t M = atoll(argv[1]);
+	size_t K = atoll(argv[2]);
+	size_t N = atoll(argv[3]);
 		
 	double *A = (double*)malloc(M * K * sizeof(*A));
 	double *B = (double*)malloc(K * N * sizeof(*B));
 	double *C = (double*)malloc(M * N * sizeof(*C));
 
 	init_matrix_rand(M, K, A);
-	printf("A:\n");
-	printMatrix(M, K, A);
-
 	init_matrix_rand(K, N, B);
-	printf("B:\n");
-	printMatrix(K, N, B);
-
 	init_matrix_val(M, N, C, 0.0);
 
+	double start = omp_get_wtime();
 	simple_mult(M, N, K, A, B, C);
+	double time = omp_get_wtime() - start;
 
-	printf("A*B:\n");
-	printMatrix(M, N, C);
+	printf("Simple mult time: %lf", time);
 
-	printf("Hello, world!");
+	printf("\n");
 	return 0;
 }
