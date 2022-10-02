@@ -42,14 +42,17 @@ void simple_mult(int M, int N, int K, double *A, double *B, double *C)
 	}
 }
 
+int num_of_threads = 2;
+
 void blas_dgemm(int M, int N, int K, double *A, double *B, double *C)
 {
-        #pragma omp parallel
+        size_t i, j, k;
+
+        #pragma omp parallel shared(A, B, C) private(i, j, k) num_threads(num_of_threads)
         {
                 double sum = 0;
-                size_t i, j, k;
 
-                #pragma omp for
+                #pragma omp for schedule(static)
                 for (i = 0; i < M; i++) {
                         for (j = 0; j < N; j++) {
                                 sum = 0;
@@ -114,10 +117,11 @@ int main(int argc, char **argv)
 	if(argc != 5)
 	{
 		printf("Enter arguments: \n");
-                printf("\tM\n");
-                printf("\tN\n");
-                printf("\tK\n");
-                printf("\tthreads\n");
+                printf("\t%s ", argv[0]);
+                printf("M ");
+                printf("N ");
+                printf("K ");
+                printf("number_of_threads");
 		return 1;
 	}
 
@@ -139,9 +143,8 @@ int main(int argc, char **argv)
 	printf("Simple mult time: %lf, ", simple_time);
         printf("sum = %lf\n", sum_of_elems(M, N, C));
 
-        omp_set_dynamic(0);
-        omp_set_num_threads(atoi(argv[4]));
-
+        num_of_threads = atoll(argv[4]);
+        
 	double dgemm_start = omp_get_wtime();
         blas_dgemm(M, N, K, A, B, C);
         double dgemm_time = omp_get_wtime() - dgemm_start;
