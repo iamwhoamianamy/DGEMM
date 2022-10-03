@@ -24,28 +24,7 @@ char size(int height, int width)
 	return sizeof(double) * height * width;
 }
 
-void simple_mult(int M, int N, int K, double *A, double *B, double *C)
-{
-	double sum = 0;
-	size_t i, j, k;
-
-	for (i = 0; i < M; i++)
-	{
-		for (j = 0; j < N; j++)
-		{
-			sum = 0;
-
-			for (k = 0; k < K; k++)
-			{
-				sum += get_elem(i, k, M, A) * get_elem(k, j, K, B);
-			}
-
-			set_elem(i, j, M, C, sum);
-		}
-	}
-}
-
-int num_of_threads = 2;
+int num_of_threads = 1;
 
 void blas_dgemm(int M, int N, int K, double *A, double *B, double *C)
 {
