@@ -3,6 +3,7 @@
 #include <omp.h>
 #include <string.h>
 #include <math.h>
+#include <stdbool.h>
 
 int flat_id(int i, int j, int height)
 {
@@ -24,28 +25,7 @@ char size(int height, int width)
 	return sizeof(double) * height * width;
 }
 
-void simple_mult(int M, int N, int K, double *A, double *B, double *C)
-{
-	double sum = 0;
-	size_t i, j, k;
-
-	for (i = 0; i < M; i++)
-	{
-		for (j = 0; j < N; j++)
-		{
-			sum = 0;
-
-			for (k = 0; k < K; k++)
-			{
-				sum += get_elem(i, k, M, A) * get_elem(k, j, K, B);
-			}
-
-			set_elem(i, j, M, C, sum);
-		}
-	}
-}
-
-int num_of_threads = 2;
+int num_of_threads = 1;
 
 void blas_dgemm(int M, int N, int K, double *A, double *B, double *C)
 {
@@ -148,21 +128,23 @@ int main(int argc, char **argv)
 	init_matrix_val(M, N, C, 0.0);
 
 	num_of_threads = atoll(argv[4]);
+	
 	printf("%d %d %d %d\n", M, N, K, num_of_threads);
 
-	double simple_start = omp_get_wtime();
-	simple_mult(M, N, K, A, B, C);
-	double simple_time = omp_get_wtime() - simple_start;
-	printf("Simple mult time: %lf, ", simple_time);
-	printf("sum = %lf\n", sum_of_elems(M, N, C));
+	size_t repeats = 5;
+	size_t i;
+	double time = 0;
 
-	double dgemm_start = omp_get_wtime();
-	blas_dgemm(M, N, K, A, B, C);
-	double dgemm_time = omp_get_wtime() - dgemm_start;
-	printf("DGEMM mult time:  %lf, ", dgemm_time);
-	printf("sum = %lf\n", sum_of_elems(M, N, C));
+	for (i = 0; i < repeats; i++) {
+		double start = omp_get_wtime();
 
-	printf("Speedup: %lf\n", simple_time / dgemm_time);
+		blas_dgemm(M, N, K, A, B, C);
+
+		time += omp_get_wtime() - start;
+	}
+
+	time /= repeats;
+	printf("Time: %lf", time);
 
 	free(A);
 	free(B);
